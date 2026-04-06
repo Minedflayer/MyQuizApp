@@ -1,35 +1,28 @@
-import { StatusBar } from 'expo-status-bar';
-import { Platform, StyleSheet } from 'react-native';
-
-import EditScreenInfo from '@/components/EditScreenInfo';
-import { Text, View } from '@/components/Themed';
+import { StatusBar } from "expo-status-bar";
+import { Platform, Text, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function ModalScreen() {
-  return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Modal</Text>
-      <View style={styles.separator} lightColor="#eee" darkColor="rgba(255,255,255,0.1)" />
-      <EditScreenInfo path="app/modal.tsx" />
+  const insets = useSafeAreaInsets();
 
-      {/* Use a light status bar on iOS to account for the black space above the modal */}
-      <StatusBar style={Platform.OS === 'ios' ? 'light' : 'auto'} />
+  return (
+    <View
+      className="flex-1 items-center justify-center bg-white p-6"
+      style={{ paddingBottom: insets.bottom }}
+    >
+      <Text className="text-2xl font-bold text-slate-800">
+        Quiz Information
+      </Text>
+
+      <View className="my-8 h-[1px] w-4/5 bg-slate-200" />
+
+      <Text className="text-center text-slate-600 leading-6">
+        This is a solo-player quiz app built with React Native, Zustand, and
+        NativeWind. Good luck with your trivia!
+      </Text>
+
+      {/* Use a light status bar on iOS to account for the modal lifestyle */}
+      <StatusBar style={Platform.OS === "ios" ? "light" : "auto"} />
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: 'bold',
-  },
-  separator: {
-    marginVertical: 30,
-    height: 1,
-    width: '80%',
-  },
-});
