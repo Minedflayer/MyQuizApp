@@ -1,6 +1,13 @@
 import { create } from "zustand";
+import { supabase } from "../../../shared/lib/supabase"; // Adjust path if needed
 
-// Structure of a single question
+// Quiz list interface
+export interface Quizinfo {
+  id: string;
+  title: string;
+  difficulty: string;
+}
+//Structure of a single question
 export interface Question {
   id: string;
   text: string;
@@ -9,70 +16,211 @@ export interface Question {
   //category: string;
 }
 
-// Define the stores states and actions
 interface QuizState {
-  // State
+  // State for choosing quiz in home screen list
+  availableQuizzes: Quizinfo[];
+  isFetchingList: boolean;
+
   questions: Question[];
   currentIndex: number;
   score: number;
-  userAnswers: number[];
-  status: "idle" | "playing" | "finished";
+  status: "idle" | "loading" | "active" | "finished" | "error";
+  errorMessage: string | null;
 
-  //Actions
-  startQuiz: (questions: Question[]) => void;
-  submitAnswer: (optionIndex: number) => void;
+  fetchQuizList: () => Promise<void>;
+  fetchAndStartQuiz: (quizId: string) => Promise<void>;
+  submitAnswer: (selectedIndex: number) => void;
   nextQuestion: () => void;
   reset: () => void;
 }
 
-// Creating the store
-export const useQuizStore = create<QuizState>((set) => ({
+export const useQuizStore = create<QuizState>((set, get) => ({
+  availableQuizzes: [],
+  isFetchingList: false,
   questions: [],
   currentIndex: 0,
   score: 0,
-  userAnswers: [],
   status: "idle",
+  errorMessage: null,
 
-  // Start new session with new questions
-  startQuiz: (questions) =>
-    set({
-      questions,
-      currentIndex: 0,
-      score: 0,
-      userAnswers: [],
-      status: "playing",
-    }),
+  fetchQuizList: async () => {
+    set({ isFetchingList: true });
+    try {
+      const { data, error } = await supabase
+        .from("quizzes")
+        .select("id, title, difficulty")
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      set({ availableQuizzes: data || [], isFetchingList: false });
+    } catch (error) {
+      console.error("Failed to fetch quizzes: ", error);
+      set({ isFetchingList: false });
+    }
+  },
 
-  // Click handler for submit button
-  submitAnswer: (optionIndex) =>
-    set((state) => {
-      const currentQuestion = state.questions[state.currentIndex];
-      const isCorrect = currentQuestion.correctIndex === optionIndex;
+  fetchAndStartQuiz: async (quizId: string) => {
+    set({ status: "loading", errorMessage: null });
 
-      return {
-        score: isCorrect ? state.score + 1 : state.score,
-        userAnswers: [...state.userAnswers, optionIndex],
-      };
-    }),
+    // nested Supabase query
+    try {
+      const { data: quizData, error } = await supabase
+        .from("quizzes")
+        .select(
+          `
+          id,
+          title,
+          questions (
+            id,
+            text,
+            options (
+              id,
+              text,
+              is_correct
+            )
+          )
+        `,
+        )
+        //.limit(1)
+        .eq("id", quizId) // Match only rows where column is equal to value.
+        .single();
 
-  nextQuestion: () =>
-    set((state) => {
-      const isLastQuestion = state.currentIndex === state.questions.length - 1;
+      if (error) throw error;
+      if (!quizData || !quizData.questions) throw new Error("No quiz found");
 
-      if (isLastQuestion) {
-        return { status: "finished" };
-      }
+      // Map the database data exactly to your interface
+      const formattedQuestions: Question[] = quizData.questions.map(
+        (q: any) => {
+          const correctIndex = q.options.findIndex(
+            (opt: any) => opt.is_correct === true,
+          );
 
-      return { currentIndex: state.currentIndex + 1 };
-    }),
+          return {
+            id: q.id, // Grab the ID from the database
+            text: q.text,
+            options: q.options.map((opt: any) => opt.text),
+            correctIndex: correctIndex !== -1 ? correctIndex : 0, // Matched your property name
+          };
+        },
+      );
 
-  // Clear function
+      set({
+        questions: formattedQuestions,
+        status: "active",
+        currentIndex: 0,
+        score: 0,
+      });
+    } catch (err: any) {
+      console.error("Supabase fetch error:", err.message);
+      set({ status: "error", errorMessage: err.message });
+    }
+  },
+
+  submitAnswer: (selectedIndex: number) => {
+    const state = get();
+    const currentQuestion = state.questions[state.currentIndex];
+
+    // Updated to use your 'correctIndex' property
+    if (selectedIndex === currentQuestion.correctIndex) {
+      set({ score: state.score + 1 });
+    }
+  },
+
+  nextQuestion: () => {
+    const state = get();
+    const nextIndex = state.currentIndex + 1;
+
+    if (nextIndex < state.questions.length) {
+      set({ currentIndex: nextIndex });
+    } else {
+      set({ status: "finished" });
+    }
+  },
+
   reset: () =>
     set({
       status: "idle",
-      questions: [],
       currentIndex: 0,
       score: 0,
-      userAnswers: [],
+      questions: [],
+      errorMessage: null,
     }),
 }));
+
+// import { create } from "zustand";
+
+// Structure of a single question
+// export interface Question {
+//   id: string;
+//   text: string;
+//   correctIndex: number;
+//   options: string[];
+//   category: string;
+// }
+
+// Define the stores states and actions
+// interface QuizState {
+//   State
+//   questions: Question[];
+//   currentIndex: number;
+//   score: number;
+//   userAnswers: number[];
+//   status: "idle" | "playing" | "finished";
+
+//   Actions
+//   startQuiz: (questions: Question[]) => void;
+//   submitAnswer: (optionIndex: number) => void;
+//   nextQuestion: () => void;
+//   reset: () => void;
+// }
+
+// Creating the store
+// export const useQuizStore = create<QuizState>((set) => ({
+//   questions: [],
+//   currentIndex: 0,
+//   score: 0,
+//   userAnswers: [],
+//   status: "idle",
+
+//   Start new session with new questions
+//   startQuiz: (questions) =>
+//     set({
+//       questions,
+//       currentIndex: 0,
+//       score: 0,
+//       userAnswers: [],
+//       status: "playing",
+//     }),
+
+//   Click handler for submit button
+//   submitAnswer: (optionIndex) =>
+//     set((state) => {
+//       const currentQuestion = state.questions[state.currentIndex];
+//       const isCorrect = currentQuestion.correctIndex === optionIndex;
+
+//       return {
+//         score: isCorrect ? state.score + 1 : state.score,
+//         userAnswers: [...state.userAnswers, optionIndex],
+//       };
+//     }),
+
+//   nextQuestion: () =>
+//     set((state) => {
+//       const isLastQuestion = state.currentIndex === state.questions.length - 1;
+
+//       if (isLastQuestion) {
+//         return { status: "finished" };
+//       }
+
+//       return { currentIndex: state.currentIndex + 1 };
+//     }),
+
+//   Clear function
+//   reset: () =>
+//     set({
+//       status: "idle",
+//       questions: [],
+//       currentIndex: 0,
+//       score: 0,
+//       userAnswers: [],
+//     }),
+// }));

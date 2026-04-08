@@ -1,32 +1,73 @@
-import { useRouter } from "expo-router";
+import { useQuizStore } from "@/src/features/quiz/store/useQuizStore";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect } from "react";
 import { Pressable, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { MOCK_QUESTIONS } from "../src/features/quiz/mockData";
-import { useQuizStore } from "../src/features/quiz/store/useQuizStore";
 
 export default function QuizScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
 
+  // Grab the ?id=xyz from the route
+  const { id } = useLocalSearchParams<{ id: string }>();
+
   // Connect to our store
   const {
     status,
+    errorMessage,
     questions,
     currentIndex,
     score,
-    startQuiz,
+    // startQuiz,
+    fetchAndStartQuiz,
     submitAnswer,
     nextQuestion,
     reset,
   } = useQuizStore();
 
-  // Initialize the quiz when the screen loads
+  // Fetch if it finds an ID from the route
+  // useEffect(() => {
+  //   startQuiz(MOCK_QUESTIONS);
+  // }, []);
+
+  // Fetch if it finds an ID from the route
   useEffect(() => {
-    startQuiz(MOCK_QUESTIONS);
-  }, []);
+    if (id) {
+      fetchAndStartQuiz(id);
+    }
+  }, [id]);
 
   const currentQuestion = questions[currentIndex];
+
+  // --- 0. ERROR STATE ---
+  if (status === "error") {
+    return (
+      <View className="flex-1 items-center justify-center p-6 bg-white">
+        <Text className="text-red-500 text-xl font-bold mb-4">Oops!</Text>
+        <Text className="text-slate-600 text-center mb-8">{errorMessage}</Text>
+        <Pressable
+          onPress={() => {
+            reset();
+            router.replace("/");
+          }}
+          className="bg-blue-600 px-6 py-3 rounded-xl"
+        >
+          <Text className="text-white font-bold">Go back</Text>
+        </Pressable>
+      </View>
+    );
+  }
+
+  // --- 1. LOADING STATE ---
+  if (status === "loading" || !currentQuestion) {
+    return (
+      <View className="flex-1 items-center justify-center bg-white">
+        <Text className="text-xl font-medium animate-pulse text-slate-500">
+          Fetching Database...
+        </Text>
+      </View>
+    );
+  }
 
   // --- 1. FINISHED STATE ---
   if (status === "finished") {

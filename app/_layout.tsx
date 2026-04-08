@@ -1,3 +1,4 @@
+import { useAuthStore } from "@/src/features/quiz/auth/store/useAuthStore";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { useEffect } from "react";
@@ -18,8 +19,13 @@ export const unstable_settings = {
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
+  const { initializeAuth } = useAuthStore();
   useEffect(() => {
     SplashScreen.hideAsync();
+  }, []);
+
+  useEffect(() => {
+    initializeAuth();
   }, []);
 
   return (
