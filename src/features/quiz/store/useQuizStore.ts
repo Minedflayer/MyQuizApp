@@ -16,24 +16,30 @@ export interface Question {
   //category: string;
 }
 
+// Define state and store
 interface QuizState {
   // State for choosing quiz in home screen list
   availableQuizzes: Quizinfo[];
   isFetchingList: boolean;
-
   questions: Question[];
   currentIndex: number;
   score: number;
   status: "idle" | "loading" | "active" | "finished" | "error";
   errorMessage: string | null;
+  selectedOptionIndex: number | null; // Tracks what the user has tapped
+  isRevealing: boolean; // Screen locks during animation
+  timeLeft: number;
 
+  // Actions (functions)
   fetchQuizList: () => Promise<void>;
   fetchAndStartQuiz: (quizId: string) => Promise<void>;
   submitAnswer: (selectedIndex: number) => void;
   nextQuestion: () => void;
   reset: () => void;
+  tick: () => void;
 }
 
+// Creating the store
 export const useQuizStore = create<QuizState>((set, get) => ({
   availableQuizzes: [],
   isFetchingList: false,
@@ -42,6 +48,21 @@ export const useQuizStore = create<QuizState>((set, get) => ({
   score: 0,
   status: "idle",
   errorMessage: null,
+  selectedOptionIndex: null,
+  isRevealing: false,
+  timeLeft: 30,
+
+  tick: () => {
+    const state = get();
+    if (state.isRevealing || state.status !== "active") return;
+
+    if (state.timeLeft > 0) {
+      set({ timeLeft: state.timeLeft - 1 });
+    } else {
+      // No time left
+      get().submitAnswer(-1);
+    }
+  },
 
   fetchQuizList: async () => {
     set({ isFetchingList: true });
@@ -58,10 +79,19 @@ export const useQuizStore = create<QuizState>((set, get) => ({
     }
   },
 
+  /**
+   * Fetches a quiz and its questions from Supabase, then initializes the quiz state
+   * for gameplay. Performs a nested query to retrieve the quiz with all related questions
+   * and options, transforms the data to match the local Question interface, and updates
+   * the store with the formatted questions, reset score, and active status.
+   *
+   * @param quizId - The ID of the quiz to fetch and start
+   * @throws Sets error state if quiz is not found or Supabase query fails
+   */
   fetchAndStartQuiz: async (quizId: string) => {
     set({ status: "loading", errorMessage: null });
 
-    // nested Supabase query
+    // Nested Supabase query
     try {
       const { data: quizData, error } = await supabase
         .from("quizzes")
@@ -80,7 +110,6 @@ export const useQuizStore = create<QuizState>((set, get) => ({
           )
         `,
         )
-        //.limit(1)
         .eq("id", quizId) // Match only rows where column is equal to value.
         .single();
 
@@ -108,6 +137,7 @@ export const useQuizStore = create<QuizState>((set, get) => ({
         status: "active",
         currentIndex: 0,
         score: 0,
+        timeLeft: 30,
       });
     } catch (err: any) {
       console.error("Supabase fetch error:", err.message);
@@ -117,12 +147,27 @@ export const useQuizStore = create<QuizState>((set, get) => ({
 
   submitAnswer: (selectedIndex: number) => {
     const state = get();
+    if (state.isRevealing) return;
     const currentQuestion = state.questions[state.currentIndex];
+    const isCorrect = selectedIndex === currentQuestion.correctIndex;
+
+    set({
+      isRevealing: true,
+      selectedOptionIndex: selectedIndex,
+      score: isCorrect ? state.score + 1 : state.score,
+    });
+
+    // Lock the screen, save the choice, and update score.
+    // set({
+    //   isRevealing: true,
+    //   selectedOptionIndex: selectedIndex,
+    //   score: isCorrect ? state.score + 1 : state.score,
+    // });
 
     // Updated to use your 'correctIndex' property
-    if (selectedIndex === currentQuestion.correctIndex) {
-      set({ score: state.score + 1 });
-    }
+    // if (selectedIndex === currentQuestion.correctIndex) {
+    //   set({ score: state.score + 1 });
+    // }
   },
 
   nextQuestion: () => {
@@ -130,9 +175,19 @@ export const useQuizStore = create<QuizState>((set, get) => ({
     const nextIndex = state.currentIndex + 1;
 
     if (nextIndex < state.questions.length) {
-      set({ currentIndex: nextIndex });
+      set({
+        currentIndex: nextIndex, // Go to next question
+        isRevealing: false, // Unlock screen for new question
+        selectedOptionIndex: null, // reset previous answer
+        timeLeft: 30,
+      });
     } else {
-      set({ status: "finished" });
+      set({
+        status: "finished",
+        isRevealing: false, // clean up
+        selectedOptionIndex: null, // clean up
+        timeLeft: 30,
+      });
     }
   },
 
@@ -143,6 +198,9 @@ export const useQuizStore = create<QuizState>((set, get) => ({
       score: 0,
       questions: [],
       errorMessage: null,
+      selectedOptionIndex: null,
+      isRevealing: false,
+      timeLeft: 30, // <-- Reset
     }),
 }));
 
