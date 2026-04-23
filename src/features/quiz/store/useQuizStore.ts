@@ -24,13 +24,14 @@ interface QuizState {
   questions: Question[];
   currentIndex: number;
   score: number;
-  status: "idle" | "loading" | "active" | "finished" | "error";
+  status: "idle" | "loading" | "countdown" | "active" | "finished" | "error";
   errorMessage: string | null;
   selectedOptionIndex: number | null; // Tracks what the user has tapped
   isRevealing: boolean; // Screen locks during animation
   timeLeft: number;
 
   // Actions (functions)
+  startActiveQuestion: () => void;
   fetchQuizList: () => Promise<void>;
   fetchAndStartQuiz: (quizId: string) => Promise<void>;
   submitAnswer: (selectedIndex: number) => void;
@@ -134,7 +135,7 @@ export const useQuizStore = create<QuizState>((set, get) => ({
 
       set({
         questions: formattedQuestions,
-        status: "active",
+        status: "countdown",
         currentIndex: 0,
         score: 0,
         timeLeft: 30,
@@ -180,6 +181,7 @@ export const useQuizStore = create<QuizState>((set, get) => ({
         isRevealing: false, // Unlock screen for new question
         selectedOptionIndex: null, // reset previous answer
         timeLeft: 30,
+        status: "countdown",
       });
     } else {
       set({
@@ -189,6 +191,10 @@ export const useQuizStore = create<QuizState>((set, get) => ({
         timeLeft: 30,
       });
     }
+  },
+
+  startActiveQuestion: () => {
+    set({ status: "active", timeLeft: 30 });
   },
 
   reset: () =>
