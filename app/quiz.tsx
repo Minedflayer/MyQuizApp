@@ -4,9 +4,9 @@ import { ActivityIndicator, Pressable, Text, View } from "react-native";
 import Animated, {
   Easing,
   FadeIn,
-  FadeInDown, // <-- Add this!
-  FadeInUp, // <-- Add this for the "pop up" effect
+  FadeInDown, // <-- Add this for the "pop up" effect
   FadeOut,
+  SlideInDown,
   SlideInRight, // <-- Changed to Slide
   SlideInUp,
   SlideOutDown, // <-- Changed to Slide
@@ -89,6 +89,14 @@ export default function QuizScreen() {
 
     return () => clearInterval(timer);
   }, [tick]); // Only depend on tick
+
+  // Log option button animation trigger
+  useEffect(() => {
+    console.log(
+      "📊 Options animation triggered - Question Index:",
+      currentIndex,
+    );
+  }, [currentIndex]);
 
   // --- 3. MOVED REANIMATED HOOKS UP HERE! ---
   const progressWidth = useSharedValue(100);
@@ -210,7 +218,7 @@ export default function QuizScreen() {
           // 2. REMOVED springify(). Replaced with a smooth 800ms elegant glide.
           entering={SlideInUp.duration(800).easing(Easing.out(Easing.exp))}
           // 3. ADDED 'absolute w-full h-full z-10' so it floats cleanly over the old screen
-          className="absolute w-full h-full px-6 justify-center items-center z-10"
+          className="absolute w-full h-full px-6 justify-center items-center z-10 bg-background"
         >
           <Text className="text-5xl font-black text-textMain mb-2 text-center">
             Quiz Over!
@@ -237,9 +245,9 @@ export default function QuizScreen() {
         <Animated.View
           key="active-quiz-screen"
           // Smoothly accelerates downward
-          exiting={SlideOutDown.duration(600).easing(Easing.in(Easing.ease))}
           // 4. ADDED 'absolute w-full h-full' so it doesn't push the layout around while exiting
-          className="absolute w-full h-full"
+          exiting={FadeOut.duration(600)}
+          className="absolute w-full h-full z-0"
         >
           {/* --- HEADER & PROGRESS BAR --- */}
           <View className="px-6 pt-4 pb-2">
@@ -328,14 +336,14 @@ export default function QuizScreen() {
                     <Animated.Text
                       key={readyText}
                       entering={ZoomIn.duration(300)}
-                      className="text-7xl font-black text-textMain"
+                      className="text-7xl font-nunito-black text-textMain"
                     >
                       {readyText}
                     </Animated.Text>
                   ) : (
                     <Animated.Text
                       entering={FadeIn.duration(400)}
-                      className="text-3xl font-black text-textMain leading-tight text-center"
+                      className="text-2xl font-nunito-black text-textMain leading-tight text-center"
                     >
                       {currentQuestion.text}
                     </Animated.Text>
@@ -441,13 +449,21 @@ export default function QuizScreen() {
             </Animated.View>
 
             {/* --- 3. RESERVED SPACE FOR CONTINUE BUTTON --- */}
-            {/* 3. ADDED a fixed height container (h-24) so the layout NEVER jumps */}
             <View className="h-24 justify-end pb-6 mt-2">
               {isRevealing && (
-                <Animated.View entering={FadeInUp.duration(300).springify()}>
+                // Starts off-screen at the bottom and springs UP into place
+                <Animated.View
+                  entering={SlideInDown.duration(500)
+
+                    .mass(0.8)}
+                  // Drops down through the bottom of the screen
+                  exiting={SlideOutDown.duration(300).easing(
+                    Easing.in(Easing.ease),
+                  )}
+                >
                   <Pressable
                     onPress={nextQuestion}
-                    className="bg-primary p-5 rounded-2xl items-center shadow-sm active:bg-red-500"
+                    className="bg-primary p-5 rounded-2xl items-center shadow-sm"
                   >
                     <Text className="text-white font-black text-xl tracking-wide">
                       {currentIndex === questions.length - 1

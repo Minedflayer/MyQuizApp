@@ -4,6 +4,11 @@ module.exports = {
   presets: [require("nativewind/preset")],
   theme: {
     extend: {
+      fontFamily: {
+        "nunito-black": ["NunitoSans_900Black"],
+        "nunito-bold": ["NunitoSans_700Bold"],
+        "nunito-regular": ["NunitoSans_400Regular"],
+      },
       colors: {
         background: "#F8FAFC", // Off-white / Cool Gray
         surface: "#FFFFFF", // Pure white for crisp question cards
