@@ -21,6 +21,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Svg, { Defs, LinearGradient, Rect, Stop } from "react-native-svg"; // <-- Import SVG components
 import "../global.css";
 import { useQuizStore } from "../src/features/quiz/store/useQuizStore";
+import HapticButton from "../src/shared/components/HapticButton";
 
 export default function QuizScreen() {
   const insets = useSafeAreaInsets();
@@ -228,7 +229,7 @@ export default function QuizScreen() {
             {questions.length}
           </Text>
 
-          <Pressable
+          <HapticButton
             onPress={() => {
               reset();
               router.replace("/");
@@ -236,7 +237,7 @@ export default function QuizScreen() {
             className="w-full bg-primary px-8 py-5 rounded-2xl active:opacity-80 items-center shadow-sm"
           >
             <Text className="text-white font-bold text-xl">Back to Home</Text>
-          </Pressable>
+          </HapticButton>
         </Animated.View>
       ) : (
         /* ==========================================
@@ -413,9 +414,8 @@ export default function QuizScreen() {
                   const finalButtonStyle = isCountdown
                     ? "bg-transparent border-slate-300 border-dashed opacity-50"
                     : buttonStyle;
-
                   return (
-                    <Pressable
+                    <HapticButton
                       key={index}
                       onPress={() => submitAnswer(index)}
                       disabled={isRevealing || isCountdown}
@@ -442,7 +442,7 @@ export default function QuizScreen() {
                           />
                         </Animated.View>
                       )}
-                    </Pressable>
+                    </HapticButton>
                   );
                 })}
               </View>
@@ -461,8 +461,9 @@ export default function QuizScreen() {
                     Easing.in(Easing.ease),
                   )}
                 >
-                  <Pressable
+                  <HapticButton
                     onPress={nextQuestion}
+                    // Look how much cleaner this is! No active:scale or haptic imports needed here.
                     className="bg-primary p-5 rounded-2xl items-center shadow-sm"
                   >
                     <Text className="text-white font-black text-xl tracking-wide">
@@ -470,7 +471,7 @@ export default function QuizScreen() {
                         ? "Finish Quiz"
                         : "Continue"}
                     </Text>
-                  </Pressable>
+                  </HapticButton>
                 </Animated.View>
               )}
             </View>
