@@ -1,13 +1,12 @@
 import { create } from "zustand";
-import { supabase } from "../../../shared/lib/supabase"; // Adjust path if needed
+import { supabase } from "../../../shared/lib/supabase";
 
-// Quiz list interface
 export interface Quizinfo {
   id: string;
   title: string;
   difficulty: string;
 }
-//Structure of a single question
+
 export interface Question {
   id: string;
   text: string;
