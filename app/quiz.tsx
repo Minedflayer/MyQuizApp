@@ -22,6 +22,8 @@ import Svg, { Defs, LinearGradient, Rect, Stop } from "react-native-svg"; // <--
 import "../global.css";
 import { useQuizStore } from "../src/features/quiz/store/useQuizStore";
 
+import QuizTimer from "@/src/features/quiz/components/QuizTimer";
+
 export default function QuizScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
@@ -165,40 +167,6 @@ export default function QuizScreen() {
       </View>
     );
   }
-
-  // // --- 2. FINISHED STATE (Updated with new gamified UI) ---
-  // if (status === "finished") {
-  //   return (
-  //     <View
-  //       className="flex-1 items-center justify-center bg-background p-6"
-  //       style={{ paddingTop: insets.top, paddingBottom: insets.bottom }}
-  //     >
-  //       <Animated.View
-  //         key={"results-screen"}
-  //         entering={SlideInUp.duration(600).springify().damping(18)}
-  //         className="flex-1 px-6 justify-center"
-  //       >
-  //         <Text className="text-5xl font-black text-textMain mb-2">
-  //           Quiz Over!
-  //         </Text>
-  //         <Text className="text-2xl mt-2 text-textMuted mb-10">
-  //           Score: <Text className="text-accent font-black">{score}</Text> /{" "}
-  //           {questions.length}
-  //         </Text>
-  //       </Animated.View>
-
-  //       <Pressable
-  //         onPress={() => {
-  //           reset();
-  //           router.replace("/");
-  //         }}
-  //         className="w-full bg-primary px-8 py-5 rounded-2xl active:opacity-80 items-center shadow-sm"
-  //       >
-  //         <Text className="text-white font-bold text-xl">Back to Home</Text>
-  //       </Pressable>
-  //     </View>
-  //   );
-  // }
 
   // Calculate progress bar percentage
   const progressPercentage = ((currentIndex + 1) / questions.length) * 100;
@@ -354,26 +322,7 @@ export default function QuizScreen() {
 
             {/* --- 1.5. THE TIMER BAR (Keep exactly as is) --- */}
             {status === "active" && (
-              <Animated.View
-                key={`timer-${currentIndex}`}
-                entering={ZoomIn.duration(2350)
-                  .delay(150)
-                  .easing(Easing.out(Easing.exp))}
-                exiting={FadeOut.duration(150)}
-                className="w-full flex-row items-center gap-3 mb-6 px-2" // Reduced mb-8 to mb-6 to save a tiny bit of space
-              >
-                <Text
-                  className={`font-black w-9 text-center ${timeLeft <= 5 ? "text-danger" : timeLeft <= 15 ? "text-accent" : "text-textMuted"}`}
-                >
-                  {timeLeft}s
-                </Text>
-                <View className="flex-1 h-3 bg-slate-200 rounded-full overflow-hidden">
-                  <Animated.View
-                    className={"h-full rounded-full"}
-                    style={animatedProgressStyle}
-                  />
-                </View>
-              </Animated.View>
+              <QuizTimer timeLeft={timeLeft} currentIndex={currentIndex} />
             )}
 
             {/* --- 2. OPTION BUTTONS (Keep exactly as is) --- */}
