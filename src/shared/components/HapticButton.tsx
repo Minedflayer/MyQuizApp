@@ -1,5 +1,6 @@
+import { Audio } from "expo-av";
 import * as Haptics from "expo-haptics";
-import React from "react";
+import React, { useEffect } from "react";
 import { GestureResponderEvent, Pressable, PressableProps } from "react-native";
 
 /**
@@ -26,25 +27,100 @@ import { GestureResponderEvent, Pressable, PressableProps } from "react-native";
  *
  */
 
+// 1. Create a dictionary of your common UI sounds
+const SOUND_FILES = {
+  tap: require("../../../assets/sounds/switch25.mp3"),
+};
+
+type SoundType = keyof typeof SOUND_FILES;
+
+const soundCache: Partial<Record<SoundType, Audio.Sound>> = {};
+
+async function preloadSound(type: SoundType) {
+  if (soundCache[type]) return; // Already loaded
+
+  try {
+    await Audio.setAudioModeAsync({ playsInSilentModeIOS: true });
+    const { sound } = await Audio.Sound.createAsync(SOUND_FILES[type]);
+    soundCache[type] = sound;
+  } catch (error) {
+    console.error("Failed to preload sound:", error);
+  }
+}
+
+// 3. Instant play function
+async function playInstantSound(type: SoundType) {
+  const sound = soundCache[type];
+  if (sound) {
+    try {
+      // Replay instantly from the beginning
+      await sound.replayAsync();
+    } catch (error) {
+      console.error("Error playing sound:", error);
+    }
+  } else {
+    // Fallback: If not loaded yet, load and play
+    preloadSound(type).then(() => soundCache[type]?.playAsync());
+  }
+}
+
 // Extend standard PressableProps so it accepts everything a normal Pressable does
 interface HapticButtonProps extends PressableProps {
   className?: string;
   // We add an optional prop so you can make specific buttons "Heavy" or "Medium" if needed
   hapticStyle?: Haptics.ImpactFeedbackStyle;
+  soundType?: SoundType | "none";
 }
 
 export default function HapticButton({
   onPress,
   className = "",
   hapticStyle = Haptics.ImpactFeedbackStyle.Light,
+  soundType = "tap",
   children,
   ...rest // Catches any other props like 'disabled'
 }: HapticButtonProps) {
+  // Preload sound as soon as the button is shown
+  useEffect(() => {
+    if (soundType !== "none") {
+      preloadSound(soundType);
+    }
+  }, [soundType]);
+
+  // Play function
+  // async function playSound(type: SoundType) {
+  //   try {
+  //     // 1. Force audio to play even if the iPhone is on silent mode
+  //     await Audio.setAudioModeAsync({
+  //       playsInSilentModeIOS: true,
+  //     });
+
+  //     // 2. Load the sound (Ensure you changed this to .mp3 or .wav!)
+  //     const { sound } = await Audio.Sound.createAsync(SOUND_FILES[type]); // <-- CHANGED TO .wav or .mp3
+
+  //     // 3. Play it
+  //     await sound.playAsync();
+
+  //     // 4. Clean up memory
+  //     sound.setOnPlaybackStatusUpdate((status) => {
+  //       if (status.isLoaded && status.didJustFinish) {
+  //         sound.unloadAsync();
+  //       }
+  //     });
+  //   } catch (error) {
+  //     // 5. If it fails, this will tell you exactly WHY in your terminal!
+  //     console.error("🚨 Error playing button sound:", error);
+  //   }
+  // }
+
   const handlePress = (e: GestureResponderEvent) => {
-    // 1. Fire the haptic feedback
     Haptics.impactAsync(hapticStyle);
 
-    // 2. Fire the actual function passed to the button (if one exists)
+    // 4. Play the sound if it's not set to "none"
+    if (soundType !== "none") {
+      playInstantSound(soundType);
+    }
+
     if (onPress) {
       onPress(e);
     }
