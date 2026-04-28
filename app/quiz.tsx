@@ -1,5 +1,6 @@
+import { Audio } from "expo-av";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { ActivityIndicator, Pressable, Text, View } from "react-native";
 import Animated, {
   Easing,
@@ -21,15 +22,66 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Svg, { Defs, LinearGradient, Rect, Stop } from "react-native-svg"; // <-- Import SVG components
 import "../global.css";
 import { useQuizStore } from "../src/features/quiz/store/useQuizStore";
+import HapticButton from "../src/shared/components/HapticButton";
 
 export default function QuizScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
 
-  // 1. Keep your logic for grabbing the ID from the route
+  // Refs to hold sound files in memory
+  const correctSoundRef = useRef<Audio.Sound | null>(null);
+  const wrongSoundRef = useRef<Audio.Sound | null>(null);
+
+  // Pre-load sounds when Quiz screen opens
+  useEffect(() => {
+    async function loadGameSoundEffects() {
+      try {
+        await Audio.setAudioModeAsync({ playsInSilentModeIOS: true });
+
+        // Load correct sound
+        const { sound: correctSound } = await Audio.Sound.createAsync(
+          require("../assets/sounds/correct-sound.mp3"),
+        );
+        correctSoundRef.current = correctSound;
+
+        // Load Wrong sound
+        const { sound: wrongSound } = await Audio.Sound.createAsync(
+          require("../assets/sounds/error-sound.mp3"),
+        );
+        wrongSoundRef.current = wrongSound;
+      } catch (error) {
+        console.error("Errog when pre-loading game sounds:", error);
+      }
+    }
+
+    loadGameSoundEffects();
+
+    // Unload sounds when thes user leaves the quiz
+    return () => {
+      if (correctSoundRef.current) correctSoundRef.current.unloadAsync();
+      if (wrongSoundRef.current) wrongSoundRef.current.unloadAsync();
+    };
+  }, []);
+
+  // Helper function for playing the sound
+  const playResultSound = async (isCorrect: boolean) => {
+    try {
+      const soundToPlay = isCorrect
+        ? correctSoundRef.current
+        : wrongSoundRef.current;
+
+      if (soundToPlay) {
+        await soundToPlay.replayAsync();
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  // Logic for grabbing the ID from the route
   const { id } = useLocalSearchParams<{ id: string }>();
 
-  // 2. Keep your specific store connections
+  // store connections
   const {
     status,
     errorMessage,
@@ -42,12 +94,12 @@ export default function QuizScreen() {
     submitAnswer,
     nextQuestion,
     reset,
-    timeLeft, // <-- Add this
-    tick, // <-- Add this
+    timeLeft,
+    tick,
     startActiveQuestion,
   } = useQuizStore();
 
-  // 3. Keep your fetching effect
+  // Fetching effect
   useEffect(() => {
     if (id) {
       fetchAndStartQuiz(id);
@@ -79,10 +131,10 @@ export default function QuizScreen() {
 
   const currentQuestion = questions[currentIndex];
 
-  // Clock engine
+  // Clock engine: Drives the countdown timer by calling tick() every second (1000ms).
+  // This updates the timeLeft state in the quiz store, which controls the timer display and progress bar color changes.
+  // The interval is cleaned up when the component unmounts to prevent memory leaks.
   useEffect(() => {
-    // Just run the interval. The store's tick() function will decide
-    // if it should actually decrement the time based on its own state.
     const timer = setInterval(() => {
       tick();
     }, 1000);
@@ -92,18 +144,13 @@ export default function QuizScreen() {
 
   // Log option button animation trigger
   useEffect(() => {
-    console.log(
-      "📊 Options animation triggered - Question Index:",
-      currentIndex,
-    );
+    console.log("Options animation triggered - Question Index:", currentIndex);
   }, [currentIndex]);
 
-  // --- 3. MOVED REANIMATED HOOKS UP HERE! ---
   const progressWidth = useSharedValue(100);
 
   useEffect(() => {
     const targetPercentage = (timeLeft / 30) * 100;
-
     if (timeLeft === 30) {
       progressWidth.value = targetPercentage;
     } else {
@@ -129,9 +176,24 @@ export default function QuizScreen() {
 
     return {
       width: `${progressWidth.value}%`,
-      backgroundColor: bgColor, // <-- Reanimated handles the color now!
+      backgroundColor: bgColor,
     };
   });
+
+  // Helper function for in-game sound effects
+  // async function playResultSound(isCorrect: boolean) {
+  //   try {
+  //     await Audio.setAudioModeAsync({ playsInSilentModeIOS: true });
+  //     const soundFile = isCorrect
+  //       ? require("../assets/sounds/correct-sound.mp3")
+  //       : require("../assets/sounds/error-sound.mp3");
+
+  //     const { sound } = await Audio.Sound.createAsync(soundFile);
+  //     await sound.playAsync();
+  //   } catch (error) {
+  //     console.error(error);
+  //   }
+  // }
 
   // --- 0. ERROR STATE (Updated with new theme colors) ---
   if (status === "error") {
@@ -166,40 +228,6 @@ export default function QuizScreen() {
     );
   }
 
-  // // --- 2. FINISHED STATE (Updated with new gamified UI) ---
-  // if (status === "finished") {
-  //   return (
-  //     <View
-  //       className="flex-1 items-center justify-center bg-background p-6"
-  //       style={{ paddingTop: insets.top, paddingBottom: insets.bottom }}
-  //     >
-  //       <Animated.View
-  //         key={"results-screen"}
-  //         entering={SlideInUp.duration(600).springify().damping(18)}
-  //         className="flex-1 px-6 justify-center"
-  //       >
-  //         <Text className="text-5xl font-black text-textMain mb-2">
-  //           Quiz Over!
-  //         </Text>
-  //         <Text className="text-2xl mt-2 text-textMuted mb-10">
-  //           Score: <Text className="text-accent font-black">{score}</Text> /{" "}
-  //           {questions.length}
-  //         </Text>
-  //       </Animated.View>
-
-  //       <Pressable
-  //         onPress={() => {
-  //           reset();
-  //           router.replace("/");
-  //         }}
-  //         className="w-full bg-primary px-8 py-5 rounded-2xl active:opacity-80 items-center shadow-sm"
-  //       >
-  //         <Text className="text-white font-bold text-xl">Back to Home</Text>
-  //       </Pressable>
-  //     </View>
-  //   );
-  // }
-
   // Calculate progress bar percentage
   const progressPercentage = ((currentIndex + 1) / questions.length) * 100;
 
@@ -228,7 +256,7 @@ export default function QuizScreen() {
             {questions.length}
           </Text>
 
-          <Pressable
+          <HapticButton
             onPress={() => {
               reset();
               router.replace("/");
@@ -236,7 +264,7 @@ export default function QuizScreen() {
             className="w-full bg-primary px-8 py-5 rounded-2xl active:opacity-80 items-center shadow-sm"
           >
             <Text className="text-white font-bold text-xl">Back to Home</Text>
-          </Pressable>
+          </HapticButton>
         </Animated.View>
       ) : (
         /* ==========================================
@@ -245,7 +273,6 @@ export default function QuizScreen() {
         <Animated.View
           key="active-quiz-screen"
           // Smoothly accelerates downward
-          // 4. ADDED 'absolute w-full h-full' so it doesn't push the layout around while exiting
           exiting={FadeOut.duration(600)}
           className="absolute w-full h-full z-0"
         >
@@ -280,7 +307,6 @@ export default function QuizScreen() {
             </View>
           </View>
 
-          {/* --- REPLACED SCROLLVIEW WITH A FLEX VIEW --- */}
           <View className="flex-1 px-6">
             {/* --- THE QUESTION CARD --- */}
             <Animated.View
@@ -291,11 +317,8 @@ export default function QuizScreen() {
               exiting={SlideOutRight.duration(500).easing(
                 Easing.in(Easing.ease),
               )}
-              // 1. ADDED flex-1 so the card dynamically absorbs the extra screen space!
               className="py-2"
             >
-              {/* 2. REMOVED aspect-[4/3] and ADDED w-full h-full max-h-[280px] */}
-              {/* This ensures it shrinks on small phones but doesn't get too giant on iPads */}
               <View className="w-full aspect-[5/3] rounded-3xl overflow-hidden shadow-sm">
                 <Svg
                   height="100%"
@@ -360,7 +383,7 @@ export default function QuizScreen() {
                   .delay(150)
                   .easing(Easing.out(Easing.exp))}
                 exiting={FadeOut.duration(150)}
-                className="w-full flex-row items-center gap-3 mb-6 px-2" // Reduced mb-8 to mb-6 to save a tiny bit of space
+                className="w-full flex-row items-center gap-3 mb-6 px-2"
               >
                 <Text
                   className={`font-black w-9 text-center ${timeLeft <= 5 ? "text-danger" : timeLeft <= 15 ? "text-accent" : "text-textMuted"}`}
@@ -376,7 +399,7 @@ export default function QuizScreen() {
               </Animated.View>
             )}
 
-            {/* --- 2. OPTION BUTTONS (Keep exactly as is) --- */}
+            {/* --- 2. OPTION BUTTONS --- */}
             <Animated.View
               key={`options-${currentIndex}`}
               entering={SlideInRight.duration(2225)
@@ -413,11 +436,14 @@ export default function QuizScreen() {
                   const finalButtonStyle = isCountdown
                     ? "bg-transparent border-slate-300 border-dashed opacity-50"
                     : buttonStyle;
-
                   return (
-                    <Pressable
+                    <HapticButton
                       key={index}
-                      onPress={() => submitAnswer(index)}
+                      soundType="none"
+                      onPress={() => {
+                        playResultSound(isCorrectOption);
+                        submitAnswer(index);
+                      }}
                       disabled={isRevealing || isCountdown}
                       className={`p-5 rounded-2xl border-2 flex-row justify-between items-center ${finalButtonStyle}`}
                     >
@@ -442,7 +468,7 @@ export default function QuizScreen() {
                           />
                         </Animated.View>
                       )}
-                    </Pressable>
+                    </HapticButton>
                   );
                 })}
               </View>
@@ -461,7 +487,7 @@ export default function QuizScreen() {
                     Easing.in(Easing.ease),
                   )}
                 >
-                  <Pressable
+                  <HapticButton
                     onPress={nextQuestion}
                     className="bg-primary p-5 rounded-2xl items-center shadow-sm"
                   >
@@ -470,7 +496,7 @@ export default function QuizScreen() {
                         ? "Finish Quiz"
                         : "Continue"}
                     </Text>
-                  </Pressable>
+                  </HapticButton>
                 </Animated.View>
               )}
             </View>
