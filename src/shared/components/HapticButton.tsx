@@ -87,32 +87,6 @@ export default function HapticButton({
     }
   }, [soundType]);
 
-  // Play function
-  // async function playSound(type: SoundType) {
-  //   try {
-  //     // 1. Force audio to play even if the iPhone is on silent mode
-  //     await Audio.setAudioModeAsync({
-  //       playsInSilentModeIOS: true,
-  //     });
-
-  //     // 2. Load the sound (Ensure you changed this to .mp3 or .wav!)
-  //     const { sound } = await Audio.Sound.createAsync(SOUND_FILES[type]); // <-- CHANGED TO .wav or .mp3
-
-  //     // 3. Play it
-  //     await sound.playAsync();
-
-  //     // 4. Clean up memory
-  //     sound.setOnPlaybackStatusUpdate((status) => {
-  //       if (status.isLoaded && status.didJustFinish) {
-  //         sound.unloadAsync();
-  //       }
-  //     });
-  //   } catch (error) {
-  //     // 5. If it fails, this will tell you exactly WHY in your terminal!
-  //     console.error("🚨 Error playing button sound:", error);
-  //   }
-  // }
-
   const handlePress = (e: GestureResponderEvent) => {
     Haptics.impactAsync(hapticStyle);
 
