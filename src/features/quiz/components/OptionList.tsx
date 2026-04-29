@@ -3,10 +3,11 @@ import HapticButton from "@/src/shared/components/HapticButton";
 import React from "react";
 import { Text, View } from "react-native";
 import Animated, {
-    Easing,
-    FadeInDown,
-    SlideInRight,
-    SlideOutLeft,
+  Easing,
+  FadeInDown,
+  FadeOut,
+  SlideInRight,
+  SlideOutLeft,
 } from "react-native-reanimated";
 
 interface OptionListProps {
@@ -16,6 +17,7 @@ interface OptionListProps {
   selectedOptionIndex: number | null;
   isRevealing: boolean;
   status: string;
+  isLastQuestion: boolean;
   submitAnswer: (index: number) => void;
   playResultSound: (isCorrect: boolean) => void;
 }
@@ -29,16 +31,22 @@ export default function OptionList({
   status,
   submitAnswer,
   playResultSound,
+  isLastQuestion,
 }: OptionListProps) {
   const isCountdown = status === "countdown";
+
+  const exitingAnimation = isLastQuestion
+    ? FadeOut.duration(300)
+    : SlideOutLeft.duration(500).easing(Easing.in(Easing.ease));
 
   return (
     <Animated.View
       key={`options-${currentIndex}`}
-      entering={SlideInRight.duration(2225)
+      entering={SlideInRight.duration(2225) // Slide animation for question options
         .delay(150)
         .easing(Easing.out(Easing.exp))}
-      exiting={SlideOutLeft.duration(500).easing(Easing.in(Easing.ease))}
+      // exiting={SlideOutLeft.duration(500).easing(Easing.in(Easing.ease))} // Slide animation for question options when exiting the view
+      exiting={exitingAnimation}
     >
       <View className="gap-4 pb-2">
         {options.map((option, index) => {

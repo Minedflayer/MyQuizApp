@@ -2,11 +2,12 @@
 import React from "react";
 import { View } from "react-native";
 import Animated, {
-    Easing,
-    FadeIn,
-    SlideInRight,
-    SlideOutRight,
-    ZoomIn,
+  Easing,
+  FadeIn,
+  SlideInRight,
+  SlideOutRight,
+  ZoomIn,
+  ZoomOut,
 } from "react-native-reanimated";
 import Svg, { Defs, LinearGradient, Rect, Stop } from "react-native-svg";
 
@@ -66,6 +67,7 @@ export default function QuestionCard({
             <Animated.Text
               key={readyText}
               entering={ZoomIn.duration(300)}
+              exiting={ZoomOut.duration(150).easing(Easing.ease)}
               className="text-7xl font-nunito-black text-textMain"
             >
               {readyText}

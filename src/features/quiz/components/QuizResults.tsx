@@ -2,7 +2,7 @@ import HapticButton from "@/src/shared/components/HapticButton";
 import { useRouter } from "expo-router";
 import React from "react";
 import { Text } from "react-native";
-import Animated, { Easing, SlideInUp } from "react-native-reanimated";
+import Animated, { Easing, ZoomIn } from "react-native-reanimated";
 
 interface QuizResultsProps {
   score: number;
@@ -24,7 +24,9 @@ export default function QuizResults({
   return (
     <Animated.View
       key="results-screen"
-      entering={SlideInUp.duration(1500).easing(Easing.out(Easing.exp))}
+      entering={ZoomIn.duration(600)
+        .delay(300)
+        .easing(Easing.out(Easing.cubic))}
       className="absolute w-full h-full px-6 justify-center items-center z-10 bg-background"
     >
       <Text className="text-5xl font-black text-textMain mb-2 text-center">
