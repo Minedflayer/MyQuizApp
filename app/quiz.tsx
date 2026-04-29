@@ -3,7 +3,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import { ActivityIndicator, Pressable, Text, View } from "react-native";
 import Animated, {
-  Easing, // <-- Add this for the "pop up" effect
+  Easing,
   FadeOut,
   useAnimatedStyle,
   useSharedValue,
@@ -231,7 +231,7 @@ export default function QuizScreen() {
         <Animated.View
           key="active-quiz-screen"
           // Smoothly accelerates downward
-          exiting={FadeOut.duration(600)}
+          exiting={FadeOut.duration(300)}
           className="absolute w-full h-full z-0"
         >
           {/* --- HEADER & PROGRESS BAR --- */}
@@ -266,6 +266,7 @@ export default function QuizScreen() {
               status={status}
               submitAnswer={submitAnswer}
               playResultSound={playResultSound}
+              isLastQuestion={currentIndex === questions.length - 1}
             />
 
             {/* --- 3. RESERVED SPACE FOR CONTINUE BUTTON --- */}
