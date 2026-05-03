@@ -42,7 +42,7 @@ export default function OptionList({
   return (
     <Animated.View
       key={`options-${currentIndex}`}
-      entering={SlideInRight.duration(2225) // Slide animation for question options
+      entering={SlideInRight.duration(2225)
         .delay(150)
         .easing(Easing.out(Easing.exp))}
       // exiting={SlideOutLeft.duration(500).easing(Easing.in(Easing.ease))} // Slide animation for question options when exiting the view
@@ -79,7 +79,7 @@ export default function OptionList({
 
           return (
             <HapticButton
-              key={index}
+              key={`option-${option}`}
               onPress={() => {
                 playResultSound(isCorrectOption);
                 submitAnswer(index);

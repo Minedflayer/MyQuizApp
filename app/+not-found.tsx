@@ -15,7 +15,7 @@ export default function NotFoundScreen() {
         style={{ paddingTop: insets.top, paddingBottom: insets.bottom }}
       >
         <Text className="text-2xl font-bold text-slate-800">
-          This screen doesn't exist.
+          {"This screen doesn't exist."}
         </Text>
 
         <Link href="/" asChild>

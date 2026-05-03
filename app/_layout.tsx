@@ -26,7 +26,7 @@ export default function RootLayout() {
 
   useEffect(() => {
     initializeAuth();
-  }, []);
+  }, [initializeAuth]);
 
   return (
     <Stack>

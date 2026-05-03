@@ -5,7 +5,6 @@ import { ActivityIndicator, Pressable, Text, View } from "react-native";
 import Animated, {
   Easing,
   FadeOut,
-  useAnimatedStyle,
   useSharedValue,
   withTiming,
 } from "react-native-reanimated";
@@ -100,7 +99,7 @@ export default function QuizScreen() {
     if (id) {
       fetchAndStartQuiz(id);
     }
-  }, [id]);
+  }, [id, fetchAndStartQuiz]);
 
   // -- The Coundown Engine --
   const [readyText, setReadyText] = useState<string | number>(3);
@@ -145,6 +144,7 @@ export default function QuizScreen() {
 
   const progressWidth = useSharedValue(100);
 
+  /**=================== */
   useEffect(() => {
     const targetPercentage = (timeLeft / 30) * 100;
     if (timeLeft === 30) {
@@ -155,26 +155,7 @@ export default function QuizScreen() {
         easing: Easing.linear,
       });
     }
-  }, [timeLeft]);
-
-  const animatedProgressStyle = useAnimatedStyle(() => {
-    // Default to your Primary color
-    let bgColor = "#4ADE80";
-
-    // If width drops below 17% (5 seconds left), turn Danger Red
-    if (progressWidth.value <= 20) {
-      bgColor = "#FF6B6B";
-    }
-    // If width drops below 50% (15 seconds left), turn Accent Yellow
-    else if (progressWidth.value <= 50) {
-      bgColor = "#FFD60A";
-    }
-
-    return {
-      width: `${progressWidth.value}%`,
-      backgroundColor: bgColor,
-    };
-  });
+  }, [timeLeft, progressWidth]);
 
   // --- 0. ERROR STATE (Updated with new theme colors) ---
   if (status === "error") {
@@ -197,7 +178,7 @@ export default function QuizScreen() {
     );
   }
 
-  // --- 1. LOADING STATE (Updated with new theme colors) ---
+  // --- 1. LOADING STATE  ---
   if (status === "loading" || (!currentQuestion && status !== "finished")) {
     return (
       <View className="flex-1 items-center justify-center bg-background">
@@ -211,7 +192,6 @@ export default function QuizScreen() {
 
   return (
     <View
-      // 1. ADDED 'relative' so the absolute children stay inside the safe area padding
       className="flex-1 bg-background relative"
       style={{ paddingTop: insets.top, paddingBottom: insets.bottom }}
     >

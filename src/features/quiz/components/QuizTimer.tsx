@@ -1,12 +1,13 @@
 import React, { useEffect } from "react";
 import { Text, View } from "react-native";
 import Animated, {
-    Easing,
-    FadeOut,
-    ZoomIn,
-    useAnimatedStyle,
-    useSharedValue,
-    withTiming,
+  Easing,
+  FadeOut,
+  ZoomIn,
+  interpolateColor,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
 } from "react-native-reanimated";
 
 interface QuizTimerProps {
@@ -36,21 +37,16 @@ export default function QuizTimer({
         easing: Easing.linear,
       });
     }
-  }, [timeLeft, totalTime]);
+  }, [timeLeft, totalTime, progressWidth]);
 
   // Manage the color-changing logic dynamically
+  // Smoothly transition between colors based on the width percentage
   const animatedProgressStyle = useAnimatedStyle(() => {
-    // Default: Primary Green
-    let bgColor = "#4ADE80";
-
-    // If 20% or less time left (e.g. <= 6s), turn Danger Red
-    if (progressWidth.value <= 20) {
-      bgColor = "#FF6B6B";
-    }
-    // If 50% or less time left (e.g. <= 15s), turn Accent Yellow
-    else if (progressWidth.value <= 50) {
-      bgColor = "#FFD60A";
-    }
+    const bgColor = interpolateColor(
+      progressWidth.value,
+      [0, 20, 50, 100],
+      ["#FF6B6B", "#FF6B6B", "#FFD60A", "#4ADE80"], // The corresponding colors
+    );
 
     return {
       width: `${progressWidth.value}%`,

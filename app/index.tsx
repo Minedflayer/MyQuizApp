@@ -27,7 +27,7 @@ export default function HomeScreen() {
     if (user) {
       fetchQuizList();
     }
-  }, [user]);
+  }, [user, fetchQuizList]);
 
   // If Supabase is checking the vault, show a blank screen
   if (!isInitialized) return null;
