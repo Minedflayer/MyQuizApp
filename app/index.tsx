@@ -44,7 +44,7 @@ export default function HomeScreen() {
     >
       <View className="mb-8 mt-4">
         <Text className="text-4xl font-black text-slate-900">
-          Quiz App 2026
+          My Quiz App 🚀
         </Text>
         <Text className="text-lg text-slate-500 mt-2">
           {" "}
