@@ -2,6 +2,8 @@
 
 A trivia application built with React Native and Expo. Designed for fluid gameplay, the app features custom native animations, dynamic UI states, and efficient global state management to create an engaging quiz experience.
 
+![Expo Go QR Code](./assets/images/QR-code-quizApp.svg)
+
 ## ✨ Features
 
 * **Paced Gameplay Flow:** Implements a timed "Ready, Set, Go" phase before each question, allowing users to focus before the active timer begins.
