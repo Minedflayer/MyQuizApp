@@ -1,4 +1,5 @@
 import { Audio } from "expo-av";
+import * as Haptics from "expo-haptics";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import { ActivityIndicator, Pressable, Text, View } from "react-native";
@@ -156,6 +157,24 @@ export default function QuizScreen() {
       });
     }
   }, [timeLeft, progressWidth]);
+
+  /**================
+   */
+
+  useEffect(() => {
+    if (status === "active") {
+      // Last 5 sec of heartbeat of the timer
+      if (timeLeft <= 5 && timeLeft > 0) {
+        const vibrationIntensity =
+          timeLeft <= 2
+            ? Haptics.ImpactFeedbackStyle.Heavy
+            : Haptics.ImpactFeedbackStyle.Medium;
+        Haptics.impactAsync(vibrationIntensity);
+      } else if (timeLeft === 0) {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      }
+    }
+  }, [timeLeft, status]);
 
   // --- 0. ERROR STATE (Updated with new theme colors) ---
   if (status === "error") {
