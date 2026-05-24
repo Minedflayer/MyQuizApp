@@ -161,6 +161,7 @@ export const useQuizStore = create<QuizState>((set, get) => ({
     const state = get();
     const nextIndex = state.currentIndex + 1;
 
+    // Checks if last question has been reached
     if (nextIndex < state.questions.length) {
       set({
         currentIndex: nextIndex,

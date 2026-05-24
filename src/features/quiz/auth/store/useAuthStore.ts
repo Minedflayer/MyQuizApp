@@ -6,6 +6,8 @@ interface AuthState {
   session: Session | null;
   user: User | null;
   isInitialized: boolean; // Tells us if Supabase has finished checking the keychain
+  signIn: (email: string, password: string) => Promise<{ error: any }>;
+  signUp: (email: string, password: string) => Promise<{ error: any }>;
 
   initializeAuth: () => void;
   signOut: () => Promise<void>;
@@ -17,7 +19,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   isInitialized: false,
 
   initializeAuth: () => {
-    // 1. Check if the user is already logged in from a previous session
+    //  Check if the user is already logged in from a previous session
     supabase.auth.getSession().then(({ data: { session } }) => {
       set({
         session,
@@ -26,7 +28,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       });
     });
 
-    // 2. Set up the Global Listener
+    // Set up the Global Listener
     // If they log in or out anywhere in the app, this updates instantly
     supabase.auth.onAuthStateChange((_event, session) => {
       set({
@@ -38,5 +40,19 @@ export const useAuthStore = create<AuthState>((set) => ({
 
   signOut: async () => {
     await supabase.auth.signOut();
+  },
+
+  signIn: async (email, password) => {
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+    if (data.session) set({ session: data.session, user: data.session.user });
+    return { error };
+  },
+
+  signUp: async (email, password) => {
+    const { data, error } = await supabase.auth.signUp({ email, password });
+    return { error };
   },
 }));
