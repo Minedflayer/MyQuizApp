@@ -22,18 +22,22 @@ A trivia application built with React Native and Expo. Designed for fluid gamepl
 ## 🚀 Quick Start
 
 **1. Clone the repository**
-\`\`\`bash
-git clone https://github.com/yourusername/your-repo-name.git
-cd your-repo-name
-\`\`\`
+```bash
+git clone https://github.com/Minedflayer/MyQuizApp.git
+cd MyQuizApp
+
+```
 
 **2. Install dependencies**
-\`\`\`bash
+```bash
 npm install
-\`\`\`
+
+```
+
 
 **3. Start the application**
-\`\`\`bash
+```bash
 npx expo start
-\`\`\`
+
+```
 
