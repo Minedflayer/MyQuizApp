@@ -4,10 +4,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import { ActivityIndicator, Pressable, Text, View } from "react-native";
 import Animated, {
-  Easing,
-  FadeOut,
-  useSharedValue,
-  withTiming,
+  FadeOut
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import "../global.css";
@@ -143,20 +140,20 @@ export default function QuizScreen() {
     console.log("Options animation triggered - Question Index:", currentIndex);
   }, [currentIndex]);
 
-  const progressWidth = useSharedValue(100);
+  // const progressWidth = useSharedValue(100);
 
   /**=================== */
-  useEffect(() => {
-    const targetPercentage = (timeLeft / 30) * 100;
-    if (timeLeft === 30) {
-      progressWidth.value = targetPercentage;
-    } else {
-      progressWidth.value = withTiming(targetPercentage, {
-        duration: 1000,
-        easing: Easing.linear,
-      });
-    }
-  }, [timeLeft, progressWidth]);
+  // useEffect(() => {
+  //   const targetPercentage = (timeLeft / 30) * 100;
+  //   if (timeLeft === 30) {
+  //     progressWidth.value = targetPercentage;
+  //   } else {
+  //     progressWidth.value = withTiming(targetPercentage, {
+  //       duration: 1000,
+  //       easing: Easing.linear,
+  //     });
+  //   }
+  // }, [timeLeft, progressWidth]);
 
   /**================
    */
