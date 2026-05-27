@@ -1,0 +1,44 @@
+name: PR Checks & Preview
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  validate_and_preview:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 🏗 Checkout code
+        uses: actions/checkout@v4
+
+      - name: ⚙️ Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: 📦 Install dependencies
+        run: npm install
+
+      - name: 🔍 Lint & Type Check
+        run: |
+          npm run lint
+          npm run type-check
+
+      # Optional: Add Jest tests here later!
+      # - name: 🧪 Run Tests
+      #   run: npm run test
+
+      - name: 🚀 Setup EAS
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      # This creates an update linked to this specific PR and comments a QR code!
+      - name: 📱 Create EAS PR Preview
+        uses: expo/expo-github-action/preview@v8
+        with:
+          command: eas update --auto --branch pr-${{ github.event.number }}
+        env:
+          EXPO_PUBLIC_SUPABASE_URL: ${{ secrets.EXPO_PUBLIC_SUPABASE_URL }}
+          EXPO_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.EXPO_PUBLIC_SUPABASE_ANON_KEY }}
