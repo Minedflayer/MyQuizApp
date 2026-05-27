@@ -12,6 +12,7 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import "../global.css";
 
+// Testing CI/CD
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
