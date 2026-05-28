@@ -22,6 +22,7 @@ interface QuizState {
   questions: Question[];
   currentIndex: number;
   score: number;
+  streak: number;
   status: "idle" | "loading" | "countdown" | "active" | "finished" | "error";
   errorMessage: string | null;
   selectedOptionIndex: number | null; // Tracks what the user has tapped
@@ -45,6 +46,7 @@ export const useQuizStore = create<QuizState>((set, get) => ({
   questions: [],
   currentIndex: 0,
   score: 0,
+  streak: 0,
   status: "idle",
   errorMessage: null,
   selectedOptionIndex: null,

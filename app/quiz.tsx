@@ -3,9 +3,7 @@ import * as Haptics from "expo-haptics";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import { ActivityIndicator, Pressable, Text, View } from "react-native";
-import Animated, {
-  FadeOut
-} from "react-native-reanimated";
+import Animated, { FadeOut } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import "../global.css";
 import { useQuizStore } from "../src/features/quiz/store/useQuizStore";
@@ -81,6 +79,7 @@ export default function QuizScreen() {
     questions,
     currentIndex,
     score,
+    streak,
     selectedOptionIndex,
     isRevealing,
     fetchAndStartQuiz,
