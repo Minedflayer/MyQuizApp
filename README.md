@@ -49,3 +49,23 @@ npx expo start
 
 ```
 
+## ⚙️ CI/CD Pipeline
+
+This project uses **GitHub Actions** and **Expo Application Services (EAS)** to automate code quality checks, PR previews, and production updates.
+
+### 🔍 Pull Request Checks & Preview (`PR Checks & Preview`)
+Triggers automatically whenever a pull request is opened or updated targeting the `main` branch.
+
+* **Linting & Type Checking:** Runs `npm run lint` and `npm run type-check` to enforce code quality and TypeScript rules before code is merged.
+* **EAS Preview Builds:** Automatically generates a dynamic Expo update published to an isolated PR branch (`pr-<PR_NUMBER>`).
+* **Interactive Feedback:** Uses `expo-github-action/preview` to automatically comment a scanable QR code directly on the Pull Request, allowing reviewers to test updates on live mobile devices using Expo Go.
+* **Environment Injection:** Passes dynamic Supabase configuration secrets (`EXPO_PUBLIC_SUPABASE_URL` and `EXPO_PUBLIC_SUPABASE_ANON_KEY`) at build time.
+
+---
+
+### 🚀 Production Continuous Deployment (`Production CD`)
+Triggers automatically on code pushes or merged PRs directly to the `main` branch *(ignoring non-code changes like `.md` files or documentation)*.
+
+* **Strict Reproducible Environment:** Uses `npm ci` to ensure lockfile integrity and prevent dependency drift.
+* **Multi-Platform Release:** Runs `eas update --auto --branch production --platform all` to push Over-The-Air (OTA) updates to both iOS and Android production app instances instantly.
+
